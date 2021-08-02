@@ -1,5 +1,8 @@
 public class ItemMap : IMapObject
 {
+	#region Pk9rEdit ItemMap
+	public int countAutoPick = 0;
+	#endregion
 	public int x;
 
 	public int y;

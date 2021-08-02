@@ -1,5 +1,6 @@
 using System.Net.NetworkInformation;
 using System.Threading;
+using AssemblyCSharp.Mod.Xmap;
 using UnityEngine;
 
 public class Main : MonoBehaviour
@@ -104,7 +105,7 @@ public class Main : MonoBehaviour
 			}
 			else
 			{
-				Screen.SetResolution(1024, 600, fullscreen: false);
+				Screen.SetResolution(1280, 720, fullscreen: false);
 			}
 		}
 	}
@@ -283,6 +284,7 @@ public class Main : MonoBehaviour
 			DataInputStream.update();
 			SMS.update();
 			Net.update();
+			Pk9rXmap.Update();
 			f++;
 			if (f > 8)
 			{
@@ -329,12 +331,12 @@ public class Main : MonoBehaviour
 			{
 				switch (Event.current.keyCode)
 				{
-				case KeyCode.Alpha2:
-					num = 64;
-					break;
-				case KeyCode.Minus:
-					num = 95;
-					break;
+					case KeyCode.Alpha2:
+						num = 64;
+						break;
+					case KeyCode.Minus:
+						num = 95;
+						break;
 				}
 			}
 			if (num != 0)

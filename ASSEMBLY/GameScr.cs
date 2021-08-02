@@ -1,8 +1,22 @@
 using System;
+using AssemblyCSharp.Mod.PickMob;
+using AssemblyCSharp.Mod.Xmap;
 using Assets.src.g;
+using UnityEngine;
+using System.Threading;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 public class GameScr : mScreen, IChatable
 {
+	#region Pk9rEdit GameScr
+	public void MyDoDoubleClickToObj(IMapObject obj)
+	{
+		doDoubleClickToObj(obj);
+	}
+	#endregion
 	public static bool isPaintOther = false;
 
 	public static MyVector textTime = new MyVector(string.Empty);
@@ -148,6 +162,48 @@ public class GameScr : mScreen, IChatable
 	public static int indexRowMax;
 
 	public static int indexMenu = 0;
+
+	public static bool buffdau;
+
+	public static int timebuff;
+
+	public static int timeak = 300;
+
+	public static bool ak;
+
+	public static bool skill;
+
+	public static int timeskill;
+
+	public static bool achat;
+
+	public static bool lineboss;
+
+	public static bool xindau;
+
+	public static bool chodau;
+
+	public static bool thudau;
+
+	public static bool nvat;
+
+	public static bool boss;
+
+	public static string[] bossinfo = new string[]{
+		"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
+	};
+
+	public static bool viewboss;
+
+	public static List<string> listboss = new List<string>();
+
+	public static bool ukhu;
+
+	public static int kiemtra = 1;
+
+	public static bool khoamap;
+
+	public static bool focusboss;
 
 	public Item itemFocus;
 
@@ -449,9 +505,9 @@ public class GameScr : mScreen, IChatable
 
 	public static bool isUseTouch;
 
-	public static Skill[] keySkill = new Skill[5];
+	public static Skill[] keySkill = new Skill[8];
 
-	public static Skill[] onScreenSkill = new Skill[5];
+	public static Skill[] onScreenSkill = new Skill[8];
 
 	public Command cmdMenu;
 
@@ -1121,7 +1177,7 @@ public class GameScr : mScreen, IChatable
 	public void onOSkill(sbyte[] oSkillID)
 	{
 		Cout.println("GET onScreenSkill!");
-		onScreenSkill = new Skill[5];
+		onScreenSkill = new Skill[8];
 		if (oSkillID == null)
 		{
 			loadDefaultonScreenSkill();
@@ -1144,7 +1200,7 @@ public class GameScr : mScreen, IChatable
 	public void onKSkill(sbyte[] kSkillID)
 	{
 		Cout.println("GET KEYSKILL!");
-		keySkill = new Skill[5];
+		keySkill = new Skill[8];
 		if (kSkillID == null)
 		{
 			loadDefaultKeySkill();
@@ -1236,7 +1292,7 @@ public class GameScr : mScreen, IChatable
 		Skill skill = Char.myCharz().getSkill(skillTemplate);
 		string[] array = ((!TField.isQwerty) ? mResources.key_skill : mResources.key_skill_qwerty);
 		MyVector myVector = new MyVector();
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 8; i++)
 		{
 			myVector.addElement(new Command(p: new object[2]
 			{
@@ -2430,7 +2486,14 @@ public class GameScr : mScreen, IChatable
 		mSystem.endKey();
 		if (Char.myCharz().cHP <= 0 || Char.myCharz().statusMe == 14 || Char.myCharz().statusMe == 5)
 		{
-			if (Char.myCharz().meDead)
+			//Gán vào GameScr.resetButton
+			if (global::Char.myCharz().meDead && GameScr.IsGoBack && GameScr.IdmapGB != -1)
+			{
+				GameScr.isAutoPlay = false;
+				Service.gI().returnTownFromDead();
+				new Thread(new ThreadStart(GameScr.GoBack)).Start();
+			}
+			else // (Char.myCharz().meDead)
 			{
 				cmdDead = new Command(mResources.DIES[0], 11038);
 				center = cmdDead;
@@ -2656,10 +2719,72 @@ public class GameScr : mScreen, IChatable
 								doSelectSkill(keySkill[4], isShortcut: true);
 							}
 						}
+						else if (GameCanvas.keyPressed[6])
+						{
+							if (keySkill[5] != null)
+							{
+								doSelectSkill(keySkill[5], isShortcut: true);
+							}
+						}
+						else if (GameCanvas.keyPressed[7])
+						{
+							if (keySkill[6] != null)
+							{
+								doSelectSkill(keySkill[6], isShortcut: true);
+							}
+						}
+						else if (GameCanvas.keyPressed[8])
+						{
+							if (keySkill[7] != null)
+							{
+								doSelectSkill(keySkill[7], isShortcut: true);
+							}
+						}
 						else if (GameCanvas.keyAsciiPress == 114)
 						{
 							ChatTextField.gI().startChat(this, string.Empty);
 						}
+						else if (GameCanvas.keyAsciiPress == 'k')
+						{
+							GameScr.focusboss = !GameScr.focusboss;
+							new Thread(new ThreadStart(AutoFocusBoss)).Start();
+							GameScr.info1.addInfo("Auto focus boss: " + (GameScr.focusboss ? "Bật" : "Tắt"), 0);
+						}
+						else if (GameCanvas.keyAsciiPress == 109)
+						{
+							string checkname = "";
+							MyVector myVector = new MyVector();
+							for (int i = 0; i < GameScr.vMob.size(); i++)
+							{
+								Mob mob = (Mob)GameScr.vMob.elementAt(i);
+								if (!mob.isMobMe && !checkname.Contains(mob.getTemplate().name))
+								{
+									myVector.addElement(new Command(mob.getTemplate().name, 14));
+									checkname += mob.getTemplate().name;
+								}
+							}
+							GameCanvas.menu.startAt(myVector, 14);
+						}
+						else if (GameCanvas.keyAsciiPress == 111)
+						{
+							MyVector myVector = new MyVector();
+							myVector.addElement(new Command(GameScr.nvat ? "Nhân vật: On" : "Nhân vật: Off", 3));
+							myVector.addElement(new Command(GameScr.boss ? "Boss: On" : "Boss: Off", 4));
+							myVector.addElement(new Command(GameScr.xindau ? "Xin đậu: On" : "Xin đậu: Off", 5));
+							myVector.addElement(new Command(GameScr.chodau ? "Cho đậu: On" : "Cho đậu: Off", 6));
+							myVector.addElement(new Command(GameScr.lineboss ? "Line boss: On" : "Line boss: Off", 7));
+							myVector.addElement(new Command(GameScr.achat ? "Auto chat: On" : "Auto chat: Off", 8));
+							myVector.addElement(new Command(GameScr.ak ? "AK: On" : "AK: Off", 9));
+							myVector.addElement(new Command("Đổi màu trời", 10));
+							myVector.addElement(new Command(GameScr.thudau ? "Thu đậu: On" : "Thu đậu: Off", 11));
+							myVector.addElement(new Command(GameScr.viewboss ? "Boss: Bật" : "Boss: Tắt", 12));
+							myVector.addElement(new Command(GameScr.ukhu ? "Khu realtime: Bật" : "Khu realtime: Tắt", 13));
+							myVector.addElement(new Command(GameScr.nhatdoderoi ? "Nhặt đồ đệ: Bật" : "Nhặt đồ đệ: Tắt", 15));
+							GameCanvas.menu.startAt(myVector, 3);
+							return;
+						}
+						else if (Pk9rXmap.HotKeys()) { }
+						else if (Pk9rPickMob.HotKeys()) { }
 					}
 					else if (!GameCanvas.isMoveNumberPad)
 					{
@@ -3651,7 +3776,7 @@ public class GameScr : mScreen, IChatable
 			return;
 		}
 		bool flag = false;
-		for (int i = 0; i < vMob.size(); i++)
+		foreach (int i in listMob)
 		{
 			Mob mob = (Mob)vMob.elementAt(i);
 			if (mob.status != 0 && mob.status != 1)
@@ -3659,6 +3784,14 @@ public class GameScr : mScreen, IChatable
 				flag = true;
 			}
 		}
+		//for (int i = 0; i < vMob.size(); i++)
+		//{
+		//	Mob mob = (Mob)vMob.elementAt(i);
+		//	if (mob.status != 0 && mob.status != 1)
+		//	{
+		//		flag = true;
+		//	}
+		//}
 		if (!flag)
 		{
 			return;
@@ -3683,7 +3816,7 @@ public class GameScr : mScreen, IChatable
 		}
 		if (Char.myCharz().mobFocus == null || (Char.myCharz().mobFocus != null && Char.myCharz().mobFocus.isMobMe))
 		{
-			for (int k = 0; k < vMob.size(); k++)
+			foreach (int k in listMob)
 			{
 				Mob mob2 = (Mob)vMob.elementAt(k);
 				if (mob2.status != 0 && mob2.status != 1 && mob2.hp > 0 && !mob2.isMobMe)
@@ -4336,6 +4469,14 @@ public class GameScr : mScreen, IChatable
 
 	public override void update()
 	{
+		Pk9rPickMob.Update();
+		//GameScr.chiNhatNgoc();
+
+		if (GameScr.kiemtra == 1 && GameCanvas.gameTick % 20 == 0)
+		{
+			new Thread(new ThreadStart(this.autoNhay)).Start();
+			GameScr.kiemtra = 0;
+		}
 		if (GameCanvas.keyPressed[16])
 		{
 			GameCanvas.keyPressed[16] = false;
@@ -4991,20 +5132,106 @@ public class GameScr : mScreen, IChatable
 		{
 			return;
 		}
-		if (GameCanvas.open3Hour)
+
+		if (GameScr.viewboss)
 		{
-			if (GameCanvas.w > 250)
+			try
 			{
-				g.drawImage(GameCanvas.img12, 160, 6, 0);
-				mFont.tahoma_7_white.drawString(g, "Dành cho người chơi trên 12 tuổi.", 180, 2, 0);
-				mFont.tahoma_7_white.drawString(g, "Chơi quá 180 phút mỗi ngày ", 180, 12, 0);
-				mFont.tahoma_7_white.drawString(g, "sẽ hại sức khỏe.", 180, 22, 0);
+				int num15 = 270;
+				foreach (string text in GameScr.listboss.AsEnumerable<string>().Reverse<string>())
+				{
+					string[] array = text.Split(new char[]
+					{
+						'-'
+					});
+					DateTime value = Convert.ToDateTime(array[2]);
+					TimeSpan timeSpan = DateTime.Now.Subtract(value);
+					int num16 = (int)timeSpan.TotalSeconds;
+					mFont mFont;
+					if (array[1].Trim().Contains(TileMap.mapName))
+					{
+						mFont = mFont.tahoma_7_red;
+					}
+					else
+					{
+						mFont = mFont.tahoma_7b_white;
+					}
+					mFont.drawString(g, string.Concat(new string[]
+					{
+						array[0].Replace("BOSS ", ""),
+						array[1].Replace("zona", "khu"),
+						" - ",
+						(num16 < 60) ? (num16 + " giây") : timeSpan.Minutes + " phút",
+						" trước"
+					}), 550, GameCanvas.h - num15, mFont.RIGHT, mFont.tahoma_7b_yellow);
+					num15 -= 10;
+				}
 			}
-			else
+			catch (Exception e)
 			{
-				g.drawImage(GameCanvas.img12, 5, GameCanvas.h - 67, 0);
-				mFont.tahoma_7_white.drawString(g, "Dành cho người chơi trên 12 tuổi.", 25, GameCanvas.h - 70, 0);
-				mFont.tahoma_7_white.drawString(g, "Chơi quá 180 phút mỗi ngày sẽ hại sức khỏe.", 25, GameCanvas.h - 60, 0);
+				Console.WriteLine(e);
+				throw;
+			}
+		}
+		if (GameScr.nvat)
+		{
+			mFont.tahoma_7_white.drawString(g, "HP nhân vật trong map: ", 350, GameCanvas.h - 320, mFont.CENTER, mFont.tahoma_7_red);
+			int num15 = 310;
+			for (int num16 = 0; num16 < GameScr.vCharInMap.size(); num16++)
+			{
+				global::Char charname = (global::Char)GameScr.vCharInMap.elementAt(num16);
+				mFont.tahoma_7_white.drawString(g, string.Concat(new object[]
+				{
+					num16,
+					": ",
+					charname.cName,
+					" | ",
+					Mathf.Round((float)charname.cHP).ToString("#, ##0"),
+					"(",
+					Mathf.Round((float)charname.cHPFull).ToString("#, ##0"),
+					")"
+				}), 350, GameCanvas.h - num15, mFont.CENTER, mFont.tahoma_7_red);
+				num15 -= 10;
+			}
+		}
+
+		if (GameScr.boss)
+		{
+			mFont.tahoma_7_white.drawString(g, "HP boss trong map: ", 350, GameCanvas.h - 320, mFont.CENTER, mFont.tahoma_7_red);
+			int num15 = 310;
+			for (int num16 = 0; num16 < vCharInMap.size(); num16++)
+			{
+				for (int j = 0; j < 26; j++)
+				{
+					if (((Char)vCharInMap.elementAt(num16)).cName[0].ToString() == bossinfo[j])
+					{
+						global::Char charname = (global::Char)GameScr.vCharInMap.elementAt(num16);
+						mFont.tahoma_7_white.drawString(g, string.Concat(new object[]
+						{
+							num16,
+							": ",
+							charname.cName,
+							" | ",
+							Mathf.Round((float)charname.cHP).ToString("#, ##0"),
+							"(",
+							Mathf.Round((float)charname.cHPFull).ToString("#, ##0"),
+							")"
+						}), 350, GameCanvas.h - num15, mFont.CENTER, mFont.tahoma_7_red);
+						num15 -= 10;
+					}
+				}
+			}
+		}
+		if (GameScr.lineboss)
+		{
+			g.setColor(UnityEngine.Color.red);
+			for (int i = 0; i < vCharInMap.size(); i++)
+			{
+				Char nhanvat = (Char)vCharInMap.elementAt(i);
+				if (nhanvat.cTypePk == 5)
+				{
+					g.drawLine(Char.myCharz().cx - cmx, Char.myCharz().cy - cmy, nhanvat.cx - cmx, nhanvat.cy - cmy);
+				}
 			}
 		}
 		GameCanvas.debug("PA21", 1);
@@ -5827,7 +6054,7 @@ public class GameScr : mScreen, IChatable
 				{
 					if (Main.isPC)
 					{
-						string[] array2 = (TField.isQwerty ? new string[5] { "1", "2", "3", "4", "5" } : new string[5] { "7", "8", "9", "10", "11" });
+						string[] array2 = (TField.isQwerty ? new string[8] { "1", "2", "3", "4", "5", "6", "7", "8" } : new string[5] { "7", "8", "9", "10", "11" });
 						mFont.tahoma_7b_dark.drawString(g, array2[i], xSkill + xS[i] + 14, yS[i] - 13, mFont.CENTER);
 						mFont.tahoma_7b_white.drawString(g, array2[i], xSkill + xS[i] + 14, yS[i] - 14, mFont.CENTER);
 					}
@@ -6277,9 +6504,217 @@ public class GameScr : mScreen, IChatable
 	public void refreshTeam()
 	{
 	}
-
+	public static List<int> listMob = new List<int>();
 	public void onChatFromMe(string text, string to)
 	{
+		if (text == "goto")
+		{
+			GameScr.IdmapGB = TileMap.mapID;
+			GameScr.ZoneGB = TileMap.zoneID;
+			GameScr.xGB = global::Char.myCharz().cx;
+			GameScr.yGB = global::Char.myCharz().cy;
+			GameScr.info1.addInfo("Map GoBack: " + TileMap.mapName + " | Khu: " + TileMap.zoneID.ToString(), 0);
+			GameScr.info1.addInfo("Tọa độ X: " + GameScr.xGB.ToString() + " | Y: " + GameScr.yGB.ToString(), 0);
+		}
+		if (text == "goback")
+		{
+			GameScr.IsGoBack = !GameScr.IsGoBack;
+			GameScr.info1.addInfo((IsGoBack ? "Bật" : "Tắt") + " GoBack", 0);
+		}
+		if (text == "khoamap")
+		{
+			GameScr.khoamap = !GameScr.khoamap;
+			GameScr.info1.addInfo("Khóa map: " + (GameScr.khoamap ? "Bật" : "Tắt"), 0);
+		}
+		if (text == "cs")
+		{
+			Service.gI().useItem(0, 1, -1, 194);
+		}
+		if (text == "tdlt")
+		{
+			Service.gI().useItem(0, 1, -1, 521);
+		}
+		if (text == "bt")
+		{
+			Service.gI().useItem(0, 1, -1, 454);
+		}
+		if (text == "cnn")
+		{
+			GameScr.cnn = !GameScr.cnn;
+			new Thread(new ThreadStart(GameScr.chiNhatNgoc)).Start();
+			GameScr.info1.addInfo("Chỉ nhặt ngọc: " + (GameScr.cnn ? "Bật" : "Tắt"), 0);
+		}
+		if (text == "themquai")
+		{
+			GameScr.listMob.Add(global::Char.myCharz().mobFocus.mobId);
+			GameScr.info1.addInfo("Bạn đã thêm quái tại vị trí : " + global::Char.myCharz().mobFocus.mobId, 0);
+		}
+		if (text == "xoaquai")
+		{
+			GameScr.listMob.Remove(global::Char.myCharz().mobFocus.mobId);
+			GameScr.info1.addInfo("Bạn đã xóa quái tại vị trí : " + global::Char.myCharz().mobFocus.mobId, 0);
+		}
+		if (text == "xoaallquai")
+		{
+			GameScr.listMob.Clear();
+			GameScr.info1.addInfo("Bạn đã xóa danh sách quái", 0);
+		}
+		if (text.Contains("khuvip"))
+		{
+			GameScr.ukhu = !GameScr.ukhu;
+			new Thread(new ThreadStart(GameScr.updatekhu)).Start();
+			GameScr.info1.addInfo("Update khu theo thời gian: " + (GameScr.ukhu ? "Bật" : "Tắt"), 0);
+		}
+		if (text == "sb")
+		{
+			GameScr.viewboss = !GameScr.viewboss;
+			GameScr.info1.addInfo("Hiển thị thông tin boss " + (GameScr.viewboss ? "Bật" : "Tắt"), 0);
+		}
+		if (text == "nvat")
+		{
+			GameScr.nvat = !GameScr.nvat;
+			GameScr.boss = false;
+		}
+		if (text == "boss")
+		{
+			GameScr.boss = !GameScr.boss;
+			GameScr.nvat = false;
+		}
+
+		if (text.Contains("dctt "))
+		{
+			global::Char @char = (global::Char)GameScr.vCharInMap.elementAt(int.Parse(text.Replace("dctt ", "")));
+			global::Char.myCharz().cx = @char.cx;
+			global::Char.myCharz().cy = @char.cy;
+			GameScr.info1.addInfo("Dịch chuyển đến " + @char.cName, 0);
+		}
+		if (text == "xindau")
+		{
+			GameScr.xindau = !GameScr.xindau;
+			new Thread(new ThreadStart(this.autoXindau)).Start();
+			GameScr.info1.addInfo("Xin đậu: " + (GameScr.xindau ? "Bật" : "Tắt"), 0);
+		}
+		if (text == "chodau")
+		{
+			GameScr.chodau = !GameScr.chodau;
+			new Thread(new ThreadStart(this.autoChoDau)).Start();
+			GameScr.info1.addInfo("Cho đậu: " + (GameScr.chodau ? "Bật" : "Tắt"), 0);
+		}
+		if (text == "thudau")
+		{
+			GameScr.thudau = !GameScr.thudau;
+			new Thread(new ThreadStart(this.autoThuDau)).Start();
+			GameScr.info1.addInfo("Thu đậu: " + (GameScr.thudau ? "Bật" : "Tắt"), 0);
+		}
+		if (text == "line")
+		{
+			GameScr.lineboss = !GameScr.lineboss;
+			GameScr.info1.addInfo("Tạo lineboss: " + (GameScr.lineboss ? "Bật" : "Tắt"), 0);
+		}
+		if (text.Contains("chat"))
+		{
+			GameScr.achat = !GameScr.achat;
+			new Thread(new ThreadStart(GameScr.AutoChat)).Start();
+			GameScr.info1.addInfo("Auto Chat file " + (GameScr.achat ? "Bật" : "Tắt"), 0);
+		}
+		if (text.Contains("skill3 "))
+		{
+			GameScr.skill = !GameScr.skill;
+			GameScr.timeskill = int.Parse(text.Replace("skill3 ", ""));
+			new Thread(new ThreadStart(this.autoskill)).Start();
+			GameScr.info1.addInfo("Auto skill 3 trong " + GameScr.timeskill + "s :" + (GameScr.skill ? "Bật" : "Tắt"), 0);
+		}
+		if (text.Contains("k "))
+		{
+			Service.gI().requestChangeZone(int.Parse(text.Split(new char[]
+			{
+				' '
+			})[1]), -1);
+		}
+		if (text.Contains("timeak "))
+		{
+			GameScr.timeak = int.Parse(text.Replace("timeak ", ""));
+			GameScr.info1.addInfo("Thời gian tự động đánh: " + GameScr.timeak, 0);
+			text = string.Empty;
+		}
+
+		if (text == "ak")
+		{
+			GameScr.ak = !GameScr.ak;
+			new Thread(new ThreadStart(GameScr.autoak)).Start();
+			GameScr.info1.addInfo("Tự đánh: " + (GameScr.ak ? "Bật" : "Tắt"), 0);
+			text = string.Empty;
+		}
+		if (text.Contains("npc "))
+		{
+			Service.gI().openMenu(int.Parse(text.Split(new char[]
+			{
+				' '
+			})[1]));
+		}
+		if (text.Contains("timebuff "))
+		{
+			GameScr.timebuff = int.Parse(text.Replace("time ", ""));
+			GameScr.info1.addInfo("Buff đậu sau " + GameScr.timebuff + "s", 0);
+		}
+
+		if (text == "buffdau" && GameScr.timebuff != 0)
+		{
+			GameScr.buffdau = !GameScr.buffdau;
+			new Thread(new ThreadStart(this.autoBuff)).Start();
+			GameScr.info1.addInfo("Buff đậu theo time: " + (GameScr.buffdau ? "Bật" : "Tắt"), 0);
+			text = string.Empty;
+		}
+		else if (text == "buffdau" && GameScr.timebuff == 0)
+		{
+			GameScr.info1.addInfo("Bạn chưa nhập time buff đậu", 0);
+			text = string.Empty;
+		}
+		if (text == "skin")
+		{
+			if (global::Char.myCharz().charFocus != null)
+			{
+				global::Char.myCharz().head = global::Char.myCharz().charFocus.head;
+				global::Char.myCharz().body = global::Char.myCharz().charFocus.body;
+				global::Char.myCharz().leg = global::Char.myCharz().charFocus.leg;
+			}
+			if (global::Char.myCharz().npcFocus != null)
+			{
+				global::Char.myCharz().head = global::Char.myCharz().npcFocus.head;
+				global::Char.myCharz().body = global::Char.myCharz().npcFocus.body;
+				global::Char.myCharz().leg = global::Char.myCharz().npcFocus.leg;
+			}
+			if (global::Char.myCharz().mobFocus != null)
+			{
+				global::Char.myCharz().cp1 = global::Char.myCharz().mobFocus.p1;
+				global::Char.myCharz().cp2 = global::Char.myCharz().mobFocus.p2;
+				global::Char.myCharz().cp3 = global::Char.myCharz().mobFocus.p3;
+			}
+			GameScr.info1.addInfo("Mod skin", 0);
+			text = string.Empty;
+		}
+		if (text == "dark")
+		{
+			if (mGraphics.zoomLevel > 1)
+			{
+				GameScr.gI().doiMauTroi();
+			}
+			GameScr.info1.addInfo("Đổi màu trời", 0);
+			text = string.Empty;
+		}
+
+		if (text.Contains("khu"))
+		{
+			Service.gI().openUIZone();
+			GameScr.info1.addInfo("Mở khu nhanh", 0);
+			text = string.Empty;
+		}
+		if (text.Contains("speed "))
+		{
+			Time.timeScale = int.Parse(text.Replace("speed ", ""));
+			GameScr.info1.addInfo("Tốc độ game: " + Time.timeScale, 0);
+			text = string.Empty;
+		}
 		Res.outz("CHAT");
 		if (!isPaintMessage || GameCanvas.isTouch)
 		{
@@ -6375,8 +6810,12 @@ public class GameScr : mScreen, IChatable
 		{
 			Cout.LogError("Loi ham OPEN UIZONE " + ex.ToString());
 		}
-		GameCanvas.panel.setTypeZone();
-		GameCanvas.panel.show();
+
+		if (!GameScr.ukhu)
+		{
+			GameCanvas.panel.setTypeZone();
+			GameCanvas.panel.show();
+		}
 	}
 
 	public void showViewInfo()
@@ -6487,236 +6926,336 @@ public class GameScr : mScreen, IChatable
 		Cout.println("PERFORM WITH ID = " + idAction);
 		switch (idAction)
 		{
-		case 888351:
-			Service.gI().petStatus(5);
-			GameCanvas.endDlg();
-			break;
-		case 11112:
-		{
-			Char @char = (Char)p;
-			Service.gI().friend(1, @char.charID);
-			break;
-		}
-		case 11113:
-		{
-			Char char2 = (Char)p;
-			if (char2 != null)
-			{
-				Service.gI().giaodich(0, char2.charID, -1, -1);
-			}
-			break;
-		}
-		case 11114:
-		{
-			popUpYesNo = null;
-			GameCanvas.endDlg();
-			Char char3 = (Char)p;
-			if (char3 != null)
-			{
-				Service.gI().giaodich(1, char3.charID, -1, -1);
-			}
-			break;
-		}
-		case 11111:
-			if (Char.myCharz().charFocus != null)
-			{
-				InfoDlg.showWait();
-				if (GameCanvas.panel.vPlayerMenu.size() <= 0)
-				{
-					playerMenu(Char.myCharz().charFocus);
-				}
-				GameCanvas.panel.setTypePlayerMenu(Char.myCharz().charFocus);
-				GameCanvas.panel.show();
-				Service.gI().getPlayerMenu(Char.myCharz().charFocus.charID);
-				Service.gI().messagePlayerMenu(Char.myCharz().charFocus.charID);
-			}
-			break;
-		case 11115:
-			if (Char.myCharz().charFocus != null)
-			{
-				InfoDlg.showWait();
-				Service.gI().playerMenuAction(Char.myCharz().charFocus.charID, (short)Char.myCharz().charFocus.menuSelect);
-			}
-			break;
-		case 2000:
-			popUpYesNo = null;
-			GameCanvas.endDlg();
-			if ((Char)p == null)
-			{
-				Service.gI().player_vs_player(1, 3, -1);
+			case 888351:
+				Service.gI().petStatus(5);
+				GameCanvas.endDlg();
 				break;
-			}
-			Service.gI().player_vs_player(1, 3, ((Char)p).charID);
-			Service.gI().charMove();
-			break;
-		case 2001:
-			GameCanvas.endDlg();
-			break;
-		case 2003:
-			GameCanvas.endDlg();
-			InfoDlg.showWait();
-			Service.gI().player_vs_player(0, 3, Char.myCharz().charFocus.charID);
-			break;
-		case 2004:
-			GameCanvas.endDlg();
-			Service.gI().player_vs_player(0, 4, Char.myCharz().charFocus.charID);
-			break;
-		case 2005:
-			GameCanvas.endDlg();
-			popUpYesNo = null;
-			if ((Char)p == null)
-			{
-				Service.gI().player_vs_player(1, 4, -1);
-			}
-			else
-			{
-				Service.gI().player_vs_player(1, 4, ((Char)p).charID);
-			}
-			break;
-		case 2009:
-			popUpYesNo = null;
-			break;
-		case 2006:
-			GameCanvas.endDlg();
-			Service.gI().player_vs_player(2, 4, Char.myCharz().charFocus.charID);
-			break;
-		case 2007:
-			GameCanvas.endDlg();
-			GameMidlet.instance.exit();
-			break;
-		case 11038:
-			actDead();
-			break;
-		case 110382:
-			Service.gI().returnTownFromDead();
-			break;
-		case 110383:
-			Service.gI().wakeUpFromDead();
-			break;
-		case 1:
-			GameCanvas.endDlg();
-			break;
-		case 2:
-			GameCanvas.menu.showMenu = false;
-			break;
-		case 8002:
-			doFire(isFireByShortCut: false, skipWaypoint: true);
-			GameCanvas.clearKeyHold();
-			GameCanvas.clearKeyPressed();
-			break;
-		case 11057:
-		{
-			Effect2.vEffect2Outside.removeAllElements();
-			Effect2.vEffect2.removeAllElements();
-			Npc npc = (Npc)p;
-			if (npc.idItem == 0)
-			{
-				Service.gI().confirmMenu((short)npc.template.npcTemplateId, (sbyte)GameCanvas.menu.menuSelectedItem);
-			}
-			else if (GameCanvas.menu.menuSelectedItem == 0)
-			{
-				Service.gI().pickItem(npc.idItem);
-			}
-			break;
-		}
-		case 11000:
-			actMenu();
-			break;
-		case 11001:
-			Char.myCharz().findNextFocusByKey();
-			break;
-		case 11002:
-			GameCanvas.panel.hide();
-			break;
-		case 11120:
-		{
-			object[] array2 = (object[])p;
-			Skill skill4 = (Skill)array2[0];
-			int num2 = int.Parse((string)array2[1]);
-			for (int j = 0; j < onScreenSkill.Length; j++)
-			{
-				if (onScreenSkill[j] == skill4)
+			case 11112:
 				{
-					onScreenSkill[j] = null;
+					Char @char = (Char)p;
+					Service.gI().friend(1, @char.charID);
+					break;
 				}
-			}
-			onScreenSkill[num2] = skill4;
-			saveonScreenSkillToRMS();
-			break;
-		}
-		case 11121:
-		{
-			object[] array = (object[])p;
-			Skill skill3 = (Skill)array[0];
-			int num = int.Parse((string)array[1]);
-			for (int i = 0; i < keySkill.Length; i++)
-			{
-				if (keySkill[i] == skill3)
+			case 11113:
 				{
-					keySkill[i] = null;
+					Char char2 = (Char)p;
+					if (char2 != null)
+					{
+						Service.gI().giaodich(0, char2.charID, -1, -1);
+					}
+					break;
 				}
-			}
-			keySkill[num] = skill3;
-			saveKeySkillToRMS();
-			break;
-		}
-		case 110001:
-			GameCanvas.panel.setTypeMain();
-			GameCanvas.panel.show();
-			break;
-		case 110004:
-			GameCanvas.menu.showMenu = false;
-			break;
-		case 11067:
-			if (TileMap.zoneID != indexSelect)
-			{
-				Service.gI().requestChangeZone(indexSelect, indexItemUse);
+			case 11114:
+				{
+					popUpYesNo = null;
+					GameCanvas.endDlg();
+					Char char3 = (Char)p;
+					if (char3 != null)
+					{
+						Service.gI().giaodich(1, char3.charID, -1, -1);
+					}
+					break;
+				}
+			case 11111:
+				if (Char.myCharz().charFocus != null)
+				{
+					InfoDlg.showWait();
+					if (GameCanvas.panel.vPlayerMenu.size() <= 0)
+					{
+						playerMenu(Char.myCharz().charFocus);
+					}
+					GameCanvas.panel.setTypePlayerMenu(Char.myCharz().charFocus);
+					GameCanvas.panel.show();
+					Service.gI().getPlayerMenu(Char.myCharz().charFocus.charID);
+					Service.gI().messagePlayerMenu(Char.myCharz().charFocus.charID);
+				}
+				break;
+			case 11115:
+				if (Char.myCharz().charFocus != null)
+				{
+					InfoDlg.showWait();
+					Service.gI().playerMenuAction(Char.myCharz().charFocus.charID, (short)Char.myCharz().charFocus.menuSelect);
+				}
+				break;
+			case 2000:
+				popUpYesNo = null;
+				GameCanvas.endDlg();
+				if ((Char)p == null)
+				{
+					Service.gI().player_vs_player(1, 3, -1);
+					break;
+				}
+				Service.gI().player_vs_player(1, 3, ((Char)p).charID);
+				Service.gI().charMove();
+				break;
+			case 2001:
+				GameCanvas.endDlg();
+				break;
+			case 2003:
+				GameCanvas.endDlg();
 				InfoDlg.showWait();
-			}
-			else
-			{
-				info1.addInfo(mResources.ZONE_HERE, 0);
-			}
-			break;
-		case 11059:
-		{
-			Skill skill2 = onScreenSkill[selectedIndexSkill];
-			doUseSkill(skill2, isShortcut: false);
-			center = null;
-			break;
-		}
-		case 12000:
-			Service.gI().getClan(1, -1, null);
-			break;
-		case 12001:
-			GameCanvas.endDlg();
-			break;
-		case 12002:
-		{
-			GameCanvas.endDlg();
-			ClanObject clanObject = (ClanObject)p;
-			Service.gI().clanInvite(1, -1, clanObject.clanID, clanObject.code);
-			popUpYesNo = null;
-			break;
-		}
-		case 12003:
-		{
-			ClanObject clanObject = (ClanObject)p;
-			GameCanvas.endDlg();
-			Service.gI().clanInvite(2, -1, clanObject.clanID, clanObject.code);
-			popUpYesNo = null;
-			break;
-		}
-		case 12004:
-		{
-			Skill skill = (Skill)p;
-			doUseSkill(skill, isShortcut: true);
-			Char.myCharz().saveLoadPreviousSkill();
-			break;
-		}
-		case 110391:
-			Service.gI().clanInvite(0, Char.myCharz().charFocus.charID, -1, -1);
-			break;
+				Service.gI().player_vs_player(0, 3, Char.myCharz().charFocus.charID);
+				break;
+			case 2004:
+				GameCanvas.endDlg();
+				Service.gI().player_vs_player(0, 4, Char.myCharz().charFocus.charID);
+				break;
+			case 2005:
+				GameCanvas.endDlg();
+				popUpYesNo = null;
+				if ((Char)p == null)
+				{
+					Service.gI().player_vs_player(1, 4, -1);
+				}
+				else
+				{
+					Service.gI().player_vs_player(1, 4, ((Char)p).charID);
+				}
+				break;
+			case 2009:
+				popUpYesNo = null;
+				break;
+			case 2006:
+				GameCanvas.endDlg();
+				Service.gI().player_vs_player(2, 4, Char.myCharz().charFocus.charID);
+				break;
+			case 2007:
+				GameCanvas.endDlg();
+				GameMidlet.instance.exit();
+				break;
+			case 11038:
+				actDead();
+				break;
+			case 110382:
+				Service.gI().returnTownFromDead();
+				break;
+			case 110383:
+				Service.gI().wakeUpFromDead();
+				break;
+			case 1:
+				GameCanvas.endDlg();
+				break;
+			case 2:
+				GameCanvas.menu.showMenu = false;
+				break;
+			case 8002:
+				doFire(isFireByShortCut: false, skipWaypoint: true);
+				GameCanvas.clearKeyHold();
+				GameCanvas.clearKeyPressed();
+				break;
+			case 11057:
+				{
+					Effect2.vEffect2Outside.removeAllElements();
+					Effect2.vEffect2.removeAllElements();
+					Npc npc = (Npc)p;
+					if (npc.idItem == 0)
+					{
+						Service.gI().confirmMenu((short)npc.template.npcTemplateId, (sbyte)GameCanvas.menu.menuSelectedItem);
+					}
+					else if (GameCanvas.menu.menuSelectedItem == 0)
+					{
+						Service.gI().pickItem(npc.idItem);
+					}
+					break;
+				}
+			case 11000:
+				actMenu();
+				break;
+			case 11001:
+				Char.myCharz().findNextFocusByKey();
+				break;
+			case 11002:
+				GameCanvas.panel.hide();
+				break;
+			case 11120:
+				{
+					object[] array2 = (object[])p;
+					Skill skill4 = (Skill)array2[0];
+					int num2 = int.Parse((string)array2[1]);
+					for (int j = 0; j < onScreenSkill.Length; j++)
+					{
+						if (onScreenSkill[j] == skill4)
+						{
+							onScreenSkill[j] = null;
+						}
+					}
+					onScreenSkill[num2] = skill4;
+					saveonScreenSkillToRMS();
+					break;
+				}
+			case 11121:
+				{
+					object[] array = (object[])p;
+					Skill skill3 = (Skill)array[0];
+					int num = int.Parse((string)array[1]);
+					for (int i = 0; i < keySkill.Length; i++)
+					{
+						if (keySkill[i] == skill3)
+						{
+							keySkill[i] = null;
+						}
+					}
+					keySkill[num] = skill3;
+					saveKeySkillToRMS();
+					break;
+				}
+			case 110001:
+				GameCanvas.panel.setTypeMain();
+				GameCanvas.panel.show();
+				break;
+			case 110004:
+				GameCanvas.menu.showMenu = false;
+				break;
+			case 11067:
+				if (TileMap.zoneID != indexSelect)
+				{
+					Service.gI().requestChangeZone(indexSelect, indexItemUse);
+					InfoDlg.showWait();
+				}
+				else
+				{
+					info1.addInfo(mResources.ZONE_HERE, 0);
+				}
+				break;
+			case 11059:
+				{
+					Skill skill2 = onScreenSkill[selectedIndexSkill];
+					doUseSkill(skill2, isShortcut: false);
+					center = null;
+					break;
+				}
+			case 12000:
+				Service.gI().getClan(1, -1, null);
+				break;
+			case 12001:
+				GameCanvas.endDlg();
+				break;
+			case 12002:
+				{
+					GameCanvas.endDlg();
+					ClanObject clanObject = (ClanObject)p;
+					Service.gI().clanInvite(1, -1, clanObject.clanID, clanObject.code);
+					popUpYesNo = null;
+					break;
+				}
+			case 12003:
+				{
+					ClanObject clanObject = (ClanObject)p;
+					GameCanvas.endDlg();
+					Service.gI().clanInvite(2, -1, clanObject.clanID, clanObject.code);
+					popUpYesNo = null;
+					break;
+				}
+			case 12004:
+				{
+					Skill skill = (Skill)p;
+					doUseSkill(skill, isShortcut: true);
+					Char.myCharz().saveLoadPreviousSkill();
+					break;
+				}
+			case 110391:
+				{
+					Service.gI().clanInvite(0, Char.myCharz().charFocus.charID, -1, -1);
+					break;
+				}
+			case 3:
+				{
+					GameScr.nvat = !GameScr.nvat;
+					GameScr.info1.addInfo("Nhân vật: " + (GameScr.nvat ? "Bật" : "Tắt"), 0);
+					GameScr.boss = false;
+					break;
+				}
+			case 4:
+				{
+					GameScr.boss = !GameScr.boss;
+					GameScr.info1.addInfo("Boss: " + (GameScr.boss ? "Bật" : "Tắt"), 0);
+					GameScr.nvat = false;
+					break;
+				}
+			case 5:
+				{
+					GameScr.xindau = !GameScr.xindau;
+					new Thread(new ThreadStart(this.autoXindau)).Start();
+					GameScr.info1.addInfo("Xin đậu: " + (GameScr.xindau ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 6:
+				{
+					GameScr.chodau = !GameScr.chodau;
+					new Thread(new ThreadStart(this.autoChoDau)).Start();
+					GameScr.info1.addInfo("Cho đậu: " + (GameScr.chodau ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 7:
+				{
+					GameScr.lineboss = !GameScr.lineboss;
+					GameScr.info1.addInfo("Tạo lineboss: " + (GameScr.lineboss ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 8:
+				{
+					GameScr.achat = !GameScr.achat;
+					new Thread(new ThreadStart(GameScr.AutoChat)).Start();
+					GameScr.info1.addInfo("Auto Chat file " + (GameScr.achat ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 9:
+				{
+					GameScr.ak = !GameScr.ak;
+					new Thread(new ThreadStart(GameScr.autoak)).Start();
+					GameScr.info1.addInfo("Tự đánh: " + (GameScr.ak ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 10:
+				{
+					if (mGraphics.zoomLevel > 1)
+					{
+						GameScr.gI().doiMauTroi();
+					}
+
+					GameScr.info1.addInfo("Đổi màu trời", 0);
+					break;
+				}
+			case 11:
+				{
+					GameScr.thudau = !GameScr.thudau;
+					new Thread(new ThreadStart(this.autoThuDau)).Start();
+					GameScr.info1.addInfo("Thu đậu: " + (GameScr.thudau ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 12:
+				{
+					GameScr.viewboss = !GameScr.viewboss;
+					GameScr.info1.addInfo("Hiển thị thông tin boss: " + (GameScr.viewboss ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 13:
+				{
+					GameScr.ukhu = !GameScr.ukhu;
+					new Thread(new ThreadStart(GameScr.updatekhu)).Start();
+					GameScr.info1.addInfo("Hiển thị khu realtime: " + (GameScr.ukhu ? "Bật" : "Tắt"), 0);
+					break;
+				}
+			case 14:
+				{
+					GameScr.listMob.Clear();
+					for (int i = 0; i < GameScr.vMob.size(); i++)
+					{
+						Mob mob = (Mob)GameScr.vMob.elementAt(i);
+						if (((Command)GameCanvas.menu.menuItems.elementAt(GameCanvas.menu.menuSelectedItem)).caption == mob.getTemplate().name)
+						{
+							GameScr.listMob.Add(mob.mobId);
+						}
+					}
+					break;
+				}
+			case 15:
+				{
+					GameScr.nhatdoderoi = !GameScr.nhatdoderoi;
+					new Thread(new ThreadStart(GameScr.autoNhatDoDeRoi)).Start();
+					GameScr.info1.addInfo("Nhặt đồ đệ rơi: " + (GameScr.nhatdoderoi ? "Bật" : "Tắt"), 0);
+					break;
+				}
 		}
 	}
 
@@ -6812,6 +7351,14 @@ public class GameScr : mScreen, IChatable
 			chatVip = chatVip.Substring(1, chatVip.Length);
 			isFireWorks = true;
 		}
+		if (GameScr.viewboss && chatVip.StartsWith("BOSS"))
+		{
+			if (GameScr.listboss.Count > 5)
+			{
+				GameScr.listboss.RemoveAt(0);
+			}
+			GameScr.listboss.Add(chatVip.Replace(" vừa xuất hiện tại", "<hieuvn>: - ") + "-" + DateTime.Now.ToString("HH:mm:ss"));
+		}
 		vChatVip.addElement(chatVip);
 	}
 
@@ -6877,5 +7424,286 @@ public class GameScr : mScreen, IChatable
 		ChatPopup.serverChatPopUp.cmdMsg1 = new Command(mResources.CLOSE, ChatPopup.serverChatPopUp, 1001, null);
 		ChatPopup.serverChatPopUp.cmdMsg1.x = GameCanvas.w / 2 - 35;
 		ChatPopup.serverChatPopUp.cmdMsg1.y = GameCanvas.h - 35;
+	}
+
+	public void autoBuff()
+	{
+		while (GameScr.buffdau)
+		{
+			this.doUseHP();
+			Thread.Sleep(GameScr.timebuff * 1000);
+		}
+	}
+	public static void charak(global::Char @char)
+	{
+		try
+		{
+			MyVector myVector = new MyVector();
+			myVector.addElement(@char);
+			Service.gI().sendPlayerAttack(new MyVector(), myVector, -1);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+			throw;
+		}
+	}
+	public static void mobak(Mob mob)
+	{
+		try
+		{
+			MyVector myVector = new MyVector();
+			myVector.addElement(mob);
+			Service.gI().sendPlayerAttack(myVector, new MyVector(), -1);
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+			throw;
+		}
+	}
+	public static void autoak()
+	{
+		while (GameScr.ak)
+		{
+			if (Char.myCharz().mobFocus != null)
+			{
+				mobak(Char.myCharz().mobFocus);
+			}
+			else if (Char.myCharz().charFocus != null)
+			{
+				charak(Char.myCharz().charFocus);
+			}
+			Thread.Sleep(timeak * 1000);
+		}
+	}
+
+	public void autoskill()
+	{
+		while (GameScr.skill)
+		{
+			Skill skill = GameScr.onScreenSkill[2];
+			this.doUseSkillNotFocus(skill);
+			Thread.Sleep(GameScr.timeskill * 1000);
+		}
+	}
+
+	public static void AutoChat()
+	{
+		while (GameScr.achat)
+		{
+			string text = File.ReadAllText("autoChat.txt");
+			Service.gI().chat(text);
+			Thread.Sleep(2000);
+		}
+	}
+
+	public void autoXindau()
+	{
+		while (GameScr.xindau)
+		{
+			Service.gI().clanMessage(1, "", -1);
+			Thread.Sleep(300000);
+		}
+	}
+
+	public void autoChoDau()
+	{
+		while (GameScr.chodau)
+		{
+			for (int i = 0; i < ClanMessage.vMessage.size(); i++)
+			{
+				ClanMessage clanMessage = (ClanMessage)ClanMessage.vMessage.elementAt(i);
+				if (clanMessage.maxCap != 0 && clanMessage.playerName != global::Char.myCharz().cName && clanMessage.recieve != clanMessage.maxCap)
+				{
+					for (int j = 0; j < 5; j++)
+					{
+						Service.gI().clanDonate(clanMessage.id);
+						Thread.Sleep(150);
+					}
+				}
+			}
+			Thread.Sleep(150);
+		}
+	}
+
+	public void autoThuDau()
+	{
+		while (GameScr.thudau)
+		{
+			GameCanvas.gI().keyPressedz(-5);
+			Service.gI().magicTree(1);
+			Thread.Sleep(10000);
+		}
+	}
+
+	public static void updatekhu()
+	{
+		while (GameScr.ukhu)
+		{
+			Service.gI().openUIZone();
+			Thread.Sleep(200);
+		}
+	}
+	public void autoNhay()
+	{
+		this.checkClickMoveTo(global::Char.myCharz().cx, global::Char.myCharz().cy - 50);
+	}
+
+	public static bool cnn;
+	public static long thoigian;
+	public static void chiNhatNgoc()
+	{
+		try
+		{
+			while (GameScr.cnn)
+			{
+				if (mSystem.currentTimeMillis() - GameScr.thoigian > 1000L)
+				{
+					for (int i = 0; i < GameScr.vItemMap.size(); i++)
+					{
+						ItemMap item = (ItemMap)GameScr.vItemMap.elementAt(i);
+						if (item.template.id == 77 || item.template.id == 861 || item.template.id == 76)
+						{
+							Service.gI().pickItem(item.itemMapID);
+							GameScr.thoigian = mSystem.currentTimeMillis();
+						}
+					}
+				}
+				Thread.Sleep(100);
+			}
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine(e);
+			throw;
+		}
+	}
+
+	public static int FindYardrat()
+	{
+		for (int i = 0; i < global::Char.myCharz().arrItemBag.Length; i++)
+		{
+			if (Char.myCharz().arrItemBag[i].template.id == 592)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public static void TeleVip(int CharID)
+	{
+		Item[] arrItemBody = global::Char.myCharz().arrItemBody;
+
+		if (arrItemBody[5] == null)
+		{
+			Service.gI().getItem(4, (sbyte)FindYardrat());
+			Service.gI().gotoPlayer(CharID);
+			Service.gI().getItem(5, 5);
+		}
+		if (arrItemBody[5].template.id == 592)
+		{
+			Service.gI().gotoPlayer(CharID);
+			return;
+		}
+		if (!arrItemBody[5].template.name.Contains("Yardrat"))
+		{
+			Service.gI().getItem(4, (sbyte)FindYardrat());
+			Service.gI().gotoPlayer(CharID);
+			Service.gI().getItem(4, (sbyte)FindYardrat());
+		}
+	}
+
+	public static void AutoFocusBoss()
+	{
+		while (focusboss)
+		{
+			for (int i = 0; i < vCharInMap.size(); i++)
+			{
+				global::Char @char = (global::Char)GameScr.vCharInMap.elementAt(i);
+				if (@char.charID < 0 && @char.cTypePk == 5 && !@char.cName.StartsWith("Đ"))
+				{
+					global::Char.myCharz().charFocus = @char;
+				}
+			}
+			Thread.Sleep(500);
+		}
+	}
+
+	public static int IdmapGB = -1;
+
+	public static int ZoneGB;
+
+	public static bool IsGoBack;
+
+	public static int xGB;
+
+	public static int yGB;
+
+	public static void GoBack()
+	{
+		Thread.Sleep(3000);
+		if (!GameScr.gI().magicTree.isUpdate && GameScr.gI().magicTree.currPeas > 0)
+		{
+			Service.gI().magicTree(1);
+			Thread.Sleep(500);
+			GameCanvas.gI().keyPressedz(-5);
+			Thread.Sleep(1000);
+		}
+		for (int i = 0; i < GameScr.vItemMap.size(); i++)
+		{
+			ItemMap itemMap = (ItemMap)GameScr.vItemMap.elementAt(i);
+			global::Char.myCharz().cx = itemMap.x;
+			Service.gI().charMove();
+			Thread.Sleep(1000);
+			Service.gI().pickItem(itemMap.itemMapID);
+			Thread.Sleep(1000);
+		}
+		XmapController.StartRunToMapId(GameScr.IdmapGB);
+		while (TileMap.mapID != GameScr.IdmapGB)
+		{
+			Thread.Sleep(100);
+		}
+		new Thread(new ThreadStart(GameScr.DoiLaiKhu)).Start();
+	}
+	public static void DoiLaiKhu()
+	{
+		while (TileMap.zoneID != GameScr.ZoneGB)
+		{
+			Thread.Sleep(1000);
+			Service.gI().requestChangeZone(GameScr.ZoneGB, -1);
+		}
+		GameScr.MoveTo(GameScr.xGB, GameScr.yGB);
+		GameScr.isAutoPlay = true;
+	}
+	public static void MoveTo(int x, int y)
+	{
+		global::Char.myCharz().currentMovePoint = new MovePoint(x, y);
+	}
+
+	public static bool nhatdoderoi;
+	public static void autoNhatDoDeRoi()
+	{
+		while (nhatdoderoi)
+		{
+			int oldX = Char.myCharz().cx;
+			int oldY = Char.myCharz().cy;
+			for (int i = 0; i < GameScr.vItemMap.size(); i++)
+			{
+				ItemMap itemMap = (ItemMap)GameScr.vItemMap.elementAt(i);
+				if (itemMap.playerId == Char.myCharz().charID || itemMap.playerId == -1 && Math.abs(itemMap.x - Char.myCharz().cx) < 250)
+				{
+					Char.myCharz().cx = itemMap.x;
+					Char.myCharz().cy = itemMap.y;
+					Service.gI().charMove();
+					Service.gI().pickItem(itemMap.itemMapID);
+					Char.myCharz().cx = oldX;
+					Char.myCharz().cy = oldY;
+					Service.gI().charMove();
+				}
+			}
+			Thread.Sleep(1000);
+		}
 	}
 }

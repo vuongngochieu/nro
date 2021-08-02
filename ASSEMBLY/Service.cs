@@ -1,4 +1,6 @@
 using System;
+using AssemblyCSharp.Mod.PickMob;
+using AssemblyCSharp.Mod.Xmap;
 using Assets.src.g;
 
 public class Service
@@ -877,9 +879,12 @@ public class Service
 
 	public void requestChangeMap()
 	{
-		Message message = new Message((sbyte)(-23));
-		session.sendMessage(message);
-		message.cleanup();
+		if (!GameScr.khoamap)
+		{
+			Message message = new Message((sbyte)(-23));
+			session.sendMessage(message);
+			message.cleanup();
+		}
 	}
 
 	public void magicTree(sbyte type)
@@ -898,7 +903,11 @@ public class Service
 
 	public void requestChangeZone(int zoneId, int indexUI)
 	{
-		Message message = new Message((sbyte)21);
+		//if (!ItemTime.isExistItem(4387))
+		//{
+		//	gI().useItem(0, 1, -1, 521);
+		//}
+		Message message = new Message(21);
 		try
 		{
 			message.writer().writeByte(zoneId);
@@ -1563,12 +1572,12 @@ public class Service
 			{
 				switch (type)
 				{
-				case 1:
-					message = new Message((sbyte)(-4));
-					break;
-				case 2:
-					message = new Message((sbyte)67);
-					break;
+					case 1:
+						message = new Message((sbyte)(-4));
+						break;
+					case 2:
+						message = new Message((sbyte)67);
+						break;
 				}
 				message.writer().writeByte(vMob.size());
 				for (int i = 0; i < vMob.size(); i++)
@@ -1699,6 +1708,10 @@ public class Service
 
 	public void chat(string text)
 	{
+		if (Pk9rXmap.Chat(text))
+			return;
+		if (Pk9rPickMob.Chat(text))
+			return;
 		Message message = null;
 		try
 		{

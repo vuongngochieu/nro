@@ -310,8 +310,11 @@ public class mResources
 		string.Empty
 	} };
 
-	public static string[] key_skill_qwerty = new string[5]
+	public static string[] key_skill_qwerty = new string[8]
 	{
+		string.Empty,
+		string.Empty,
+		string.Empty,
 		string.Empty,
 		string.Empty,
 		string.Empty,
@@ -1112,21 +1115,21 @@ public class mResources
 		language = newLanguage;
 		switch (language)
 		{
-		case 0:
-			LoginScr.imgTitle = GameCanvas.loadImage("/mainImage/logo1.png");
-			T1.load();
-			ServerListScreen.linkweb = "http://ngocrongonline.com";
-			break;
-		case 1:
-			LoginScr.imgTitle = GameCanvas.loadImage("/mainImage/logo1E.png");
-			T2.load();
-			ServerListScreen.linkweb = "http://world.teamobi.com";
-			break;
-		case 2:
-			LoginScr.imgTitle = GameCanvas.loadImage("/mainImage/logo1E.png");
-			T3.load();
-			ServerListScreen.linkweb = "http://dragonball.indonaga.com";
-			break;
+			case 0:
+				LoginScr.imgTitle = GameCanvas.loadImage("/mainImage/logo1.png");
+				T1.load();
+				ServerListScreen.linkweb = "http://ngocrongonline.com";
+				break;
+			case 1:
+				LoginScr.imgTitle = GameCanvas.loadImage("/mainImage/logo1E.png");
+				T2.load();
+				ServerListScreen.linkweb = "http://world.teamobi.com";
+				break;
+			case 2:
+				LoginScr.imgTitle = GameCanvas.loadImage("/mainImage/logo1E.png");
+				T3.load();
+				ServerListScreen.linkweb = "http://dragonball.indonaga.com";
+				break;
 		}
 	}
 
