@@ -1,0 +1,7 @@
+D:\nro\NRO_GIT\ASSEMBLY\bin\Debug\net35\Assembly-CSharp.dll
+D:\nro\NRO_GIT\ASSEMBLY\bin\Debug\net35\Assembly-CSharp.pdb
+D:\nro\NRO_GIT\ASSEMBLY\bin\Debug\net35\UnityEngine.dll
+D:\nro\NRO_GIT\ASSEMBLY\obj\Debug\net35\Assembly-CSharp.csproj.CoreCompileInputs.cache
+D:\nro\NRO_GIT\ASSEMBLY\obj\Debug\net35\Assembly-CSharp.csproj.CopyComplete
+D:\nro\NRO_GIT\ASSEMBLY\obj\Debug\net35\Assembly-CSharp.dll
+D:\nro\NRO_GIT\ASSEMBLY\obj\Debug\net35\Assembly-CSharp.pdb
