@@ -167,7 +167,7 @@ public class GameScr : mScreen, IChatable
 
 	public static int timebuff;
 
-	public static int timeak = 300;
+	public static int timeak = 500;
 
 	public static bool ak;
 
@@ -7470,15 +7470,15 @@ public class GameScr : mScreen, IChatable
 	{
 		while (GameScr.ak)
 		{
-			if (Char.myCharz().mobFocus != null)
+			if (global::Char.myCharz().mobFocus != null)
 			{
-				mobak(Char.myCharz().mobFocus);
+				mobak(global::Char.myCharz().mobFocus);
 			}
-			else if (Char.myCharz().charFocus != null)
+			else if (global::Char.myCharz().charFocus != null)
 			{
-				charak(Char.myCharz().charFocus);
+				charak(global::Char.myCharz().charFocus);
 			}
-			Thread.Sleep(timeak * 1000);
+			Thread.Sleep(timeak);
 		}
 	}
 
