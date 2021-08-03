@@ -524,102 +524,105 @@ public class TileMap
 
 	public static void paintTilemap(mGraphics g)
 	{
-		if (Char.isLoadingMap)
+		if (!GameScr.xoamap)
 		{
-			return;
-		}
-		GameScr.gI().paintBgItem(g, 1);
-		for (int i = 0; i < GameScr.vItemMap.size(); i++)
-		{
-			((ItemMap)GameScr.vItemMap.elementAt(i)).paintAuraItemEff(g);
-		}
-		for (int j = GameScr.gssx; j < GameScr.gssxe; j++)
-		{
-			for (int k = GameScr.gssy; k < GameScr.gssye; k++)
+			if (Char.isLoadingMap)
 			{
-				if (j == 0 || j == tmw - 1)
+				return;
+			}
+			GameScr.gI().paintBgItem(g, 1);
+			for (int i = 0; i < GameScr.vItemMap.size(); i++)
+			{
+				((ItemMap)GameScr.vItemMap.elementAt(i)).paintAuraItemEff(g);
+			}
+			for (int j = GameScr.gssx; j < GameScr.gssxe; j++)
+			{
+				for (int k = GameScr.gssy; k < GameScr.gssye; k++)
 				{
-					continue;
-				}
-				int num = maps[k * tmw + j] - 1;
-				if ((tileTypeAt(j, k) & 0x100) == 256)
-				{
-					continue;
-				}
-				if ((tileTypeAt(j, k) & 0x20) == 32)
-				{
-					g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
-					continue;
-				}
-				if ((tileTypeAt(j, k) & 0x80) == 128)
-				{
-					g.drawRegion(imgTopWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
-					continue;
-				}
-				if (tileID == 13)
-				{
-					if (!GameCanvas.lowGraphic)
+					if (j == 0 || j == tmw - 1)
 					{
-						return;
+						continue;
 					}
-					if (num != -1)
+					int num = maps[k * tmw + j] - 1;
+					if ((tileTypeAt(j, k) & 0x100) == 256)
 					{
-						paintTile(g, 0, j, k);
+						continue;
 					}
-					continue;
-				}
-				if (tileID == 2 && (tileTypeAt(j, k) & 0x200) == 512 && num != -1)
-				{
-					paintTile(g, num, j * size, k * size, 24, 1);
-					paintTile(g, num, j * size, k * size + 1, 24, 24);
-				}
-				if (tileID == 3)
-				{
-				}
-				if ((tileTypeAt(j, k) & 0x10) == 16)
-				{
-					bx = j * size - GameScr.cmx;
-					dbx = bx - GameScr.gW2;
-					dfx = (size - 2) * dbx / size;
-					fx = dfx + GameScr.gW2;
-					paintTile(g, num, fx + GameScr.cmx, k * size, 24, 24);
-				}
-				else if ((tileTypeAt(j, k) & 0x200) == 512)
-				{
-					if (num != -1)
+					if ((tileTypeAt(j, k) & 0x20) == 32)
+					{
+						g.drawRegion(imgWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						continue;
+					}
+					if ((tileTypeAt(j, k) & 0x80) == 128)
+					{
+						g.drawRegion(imgTopWaterfall, 0, 24 * (GameCanvas.gameTick % 8 >> 1), 24, 24, 0, j * size, k * size, 0);
+						continue;
+					}
+					if (tileID == 13)
+					{
+						if (!GameCanvas.lowGraphic)
+						{
+							return;
+						}
+						if (num != -1)
+						{
+							paintTile(g, 0, j, k);
+						}
+						continue;
+					}
+					if (tileID == 2 && (tileTypeAt(j, k) & 0x200) == 512 && num != -1)
 					{
 						paintTile(g, num, j * size, k * size, 24, 1);
 						paintTile(g, num, j * size, k * size + 1, 24, 24);
 					}
-				}
-				else if (num != -1)
-				{
-					paintTile(g, num, j, k);
+					if (tileID == 3)
+					{
+					}
+					if ((tileTypeAt(j, k) & 0x10) == 16)
+					{
+						bx = j * size - GameScr.cmx;
+						dbx = bx - GameScr.gW2;
+						dfx = (size - 2) * dbx / size;
+						fx = dfx + GameScr.gW2;
+						paintTile(g, num, fx + GameScr.cmx, k * size, 24, 24);
+					}
+					else if ((tileTypeAt(j, k) & 0x200) == 512)
+					{
+						if (num != -1)
+						{
+							paintTile(g, num, j * size, k * size, 24, 1);
+							paintTile(g, num, j * size, k * size + 1, 24, 24);
+						}
+					}
+					else if (num != -1)
+					{
+						paintTile(g, num, j, k);
+					}
 				}
 			}
-		}
-		if (GameScr.cmx < 24)
-		{
-			for (int l = GameScr.gssy; l < GameScr.gssye; l++)
+			if (GameScr.cmx < 24)
 			{
-				int num2 = maps[l * tmw + 1] - 1;
-				if (num2 != -1)
+				for (int l = GameScr.gssy; l < GameScr.gssye; l++)
 				{
-					paintTile(g, num2, 0, l);
+					int num2 = maps[l * tmw + 1] - 1;
+					if (num2 != -1)
+					{
+						paintTile(g, num2, 0, l);
+					}
 				}
 			}
-		}
-		if (GameScr.cmx <= GameScr.cmxLim)
-		{
-			return;
-		}
-		int num3 = tmw - 2;
-		for (int m = GameScr.gssy; m < GameScr.gssye; m++)
-		{
-			int num4 = maps[m * tmw + num3] - 1;
-			if (num4 != -1)
+			if (GameScr.cmx <= GameScr.cmxLim)
 			{
-				paintTile(g, num4, num3 + 1, m);
+				return;
+			}
+			int num3 = tmw - 2;
+			for (int m = GameScr.gssy; m < GameScr.gssye; m++)
+			{
+				int num4 = maps[m * tmw + num3] - 1;
+				if (num4 != -1)
+				{
+					paintTile(g, num4, num3 + 1, m);
+				}
 			}
 		}
 	}

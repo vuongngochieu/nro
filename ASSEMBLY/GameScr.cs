@@ -6507,6 +6507,10 @@ public class GameScr : mScreen, IChatable
 	public static List<int> listMob = new List<int>();
 	public void onChatFromMe(string text, string to)
 	{
+		if (text == "xoamap")
+		{
+			GameScr.xoamap = !GameScr.xoamap;
+		}
 		if (text == "goto")
 		{
 			GameScr.IdmapGB = TileMap.mapID;
@@ -7706,4 +7710,6 @@ public class GameScr : mScreen, IChatable
 			Thread.Sleep(1000);
 		}
 	}
+
+	public static bool xoamap;
 }
