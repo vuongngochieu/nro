@@ -7567,14 +7567,14 @@ public class GameScr : mScreen, IChatable
 					for (int i = 0; i < GameScr.vItemMap.size(); i++)
 					{
 						ItemMap item = (ItemMap)GameScr.vItemMap.elementAt(i);
-						if (item.template.id == 77 || item.template.id == 861 || item.template.id == 76)
+						if (item.template.id == 77 || item.template.id == 861)
 						{
 							Service.gI().pickItem(item.itemMapID);
 							GameScr.thoigian = mSystem.currentTimeMillis();
 						}
 					}
 				}
-				Thread.Sleep(100);
+				Thread.Sleep(1);
 			}
 		}
 		catch (Exception e)
